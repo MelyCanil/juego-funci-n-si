@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Juego: Función SI en Excel</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #00d97e;
+    --yellow: #ffd43b;
+    --red: #ff4757;
+    --blue: #339af0;
+    --dark: #0d1117;
+    --card: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--dark);
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .bg-grid {
+    position: fixed; inset: 0; z-index: 0;
+    background-image: 
+      linear-gradient(rgba(0,217,126,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,217,126,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+
+  .container {
+    position: relative; z-index: 1;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+  }
+
+  /* HEADER */
+  header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    animation: fadeDown 0.6s ease both;
+  }
+
+  .badge {
+    display: inline-block;
+    background: rgba(0,217,126,0.15);
+    border: 1px solid var(--green);
+    color: var(--green);
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 4px 14px;
+    border-radius: 2px;
+    margin-bottom: 1rem;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 0.5rem;
+  }
+
+  h1 span { color: var(--green); }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+  }
+
+  /* PROGRESS */
+  .progress-bar-wrap {
+    background: var(--border);
+    border-radius: 4px;
+    height: 6px;
+    margin-bottom: 0.5rem;
+    overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--green), var(--blue));
+    border-radius: 4px;
+    transition: width 0.5s ease;
+  }
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-bottom: 2rem;
+  }
+
+  /* SCORE */
+  .score-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  .score-chip {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.8rem 1rem;
+    text-align: center;
+  }
+  .score-chip .val {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 800;
+  }
+  .score-chip .lbl {
+    font-size: 0.65rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .score-chip.green .val { color: var(--green); }
+  .score-chip.yellow .val { color: var(--yellow); }
+  .score-chip.blue .val { color: var(--blue); }
+
+  /* CARD */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+    animation: fadeUp 0.4s ease both;
+  }
+
+  /* TUTORIAL */
+  .tutorial-section {
+    border-left: 3px solid var(--green);
+    padding-left: 1.2rem;
+    margin-bottom: 1.5rem;
+  }
+  .tutorial-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--green);
+    margin-bottom: 0.5rem;
+  }
+  .tutorial-text {
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  .formula-box {
+    background: #0d1117;
+    border: 1px solid var(--green);
+    border-radius: 8px;
+    padding: 1rem 1.5rem;
+    font-size: 1rem;
+    color: var(--green);
+    margin: 1rem 0;
+    text-align: center;
+    letter-spacing: 0.05em;
+  }
+
+  .parts-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    margin: 1rem 0;
+  }
+  .part-item {
+    background: #0d1117;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.8rem;
+    text-align: center;
+  }
+  .part-item .part-name {
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.3rem;
+  }
+  .part-item .part-val {
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+  .part-item.p1 .part-val { color: var(--yellow); }
+  .part-item.p2 .part-val { color: var(--green); }
+  .part-item.p3 .part-val { color: var(--red); }
+
+  /* SPREADSHEET MINI */
+  .spreadsheet {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 1rem 0;
+    font-size: 0.75rem;
+  }
+  .ss-header {
+    display: grid;
+    background: #21262d;
+    border-bottom: 1px solid var(--border);
+  }
+  .ss-row {
+    display: grid;
+    border-bottom: 1px solid var(--border);
+  }
+  .ss-row:last-child { border-bottom: none; }
+  .ss-cell {
+    padding: 0.5rem 0.75rem;
+    border-right: 1px solid var(--border);
+  }
+  .ss-cell:last-child { border-right: none; }
+  .ss-cell.head { color: var(--muted); font-size: 0.65rem; text-transform: uppercase; }
+  .ss-cell.formula { color: var(--blue); font-family: 'Space Mono', monospace; }
+  .ss-cell.result-true { color: var(--green); font-weight: 700; }
+  .ss-cell.result-false { color: var(--red); font-weight: 700; }
+  .ss-cell.highlight { background: rgba(0,217,126,0.08); }
+
+  /* QUESTION */
+  .question-tag {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--yellow);
+    margin-bottom: 0.75rem;
+  }
+  .question-text {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    line-height: 1.4;
+    margin-bottom: 1.5rem;
+  }
+  .context-box {
+    background: #0d1117;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.8rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .context-box strong { color: var(--text); }
+
+  /* OPTIONS */
+  .options {
+    display: grid;
+    gap: 0.75rem;
+  }
+  .option-btn {
+    background: #0d1117;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 0.9rem 1.2rem;
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.82rem;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .option-btn:hover:not(:disabled) {
+    border-color: var(--blue);
+    background: rgba(51,154,240,0.08);
+    transform: translateX(4px);
+  }
+  .option-btn.correct {
+    border-color: var(--green);
+    background: rgba(0,217,126,0.12);
+    color: var(--green);
+  }
+  .option-btn.wrong {
+    border-color: var(--red);
+    background: rgba(255,71,87,0.1);
+    color: var(--red);
+  }
+  .option-btn:disabled { cursor: default; }
+
+  .option-letter {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    border: 1px solid currentColor;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  /* FEEDBACK */
+  .feedback {
+    margin-top: 1.2rem;
+    padding: 1rem 1.2rem;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    line-height: 1.6;
+    display: none;
+  }
+  .feedback.show { display: block; animation: fadeUp 0.3s ease; }
+  .feedback.correct-fb {
+    background: rgba(0,217,126,0.1);
+    border: 1px solid rgba(0,217,126,0.3);
+    color: var(--green);
+  }
+  .feedback.wrong-fb {
+    background: rgba(255,71,87,0.1);
+    border: 1px solid rgba(255,71,87,0.3);
+    color: #ff6b6b;
+  }
+
+  /* NEXT BTN */
+  .next-btn {
+    margin-top: 1.2rem;
+    background: var(--green);
+    color: #0d1117;
+    border: none;
+    border-radius: 8px;
+    padding: 0.85rem 2rem;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    width: 100%;
+    display: none;
+    transition: all 0.2s;
+    letter-spacing: 0.05em;
+  }
+  .next-btn:hover { background: #00f090; transform: translateY(-1px); }
+  .next-btn.show { display: block; animation: fadeUp 0.3s ease 0.2s both; }
+
+  /* DRAG N DROP CHALLENGE */
+  .drag-area {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    min-height: 52px;
+    border: 2px dashed var(--border);
+    border-radius: 8px;
+    padding: 0.75rem;
+    margin: 0.75rem 0;
+    align-items: center;
+    transition: border-color 0.2s;
+  }
+  .drag-area.over { border-color: var(--green); background: rgba(0,217,126,0.05); }
+  .drag-area.target {
+    background: #0d1117;
+    min-height: 52px;
+  }
+  .drag-chip {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 0.78rem;
+    cursor: grab;
+    transition: all 0.2s;
+    user-select: none;
+  }
+  .drag-chip:hover { border-color: var(--blue); color: var(--blue); }
+  .drag-chip.dragging { opacity: 0.4; }
+  .drag-instructions { font-size: 0.7rem; color: var(--muted); margin-bottom: 0.5rem; }
+  .built-formula {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--green);
+    padding: 0.75rem 1rem;
+    background: #0d1117;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    min-height: 44px;
+    margin: 0.5rem 0;
+    word-break: break-all;
+  }
+  .check-btn {
+    background: var(--yellow);
+    color: #0d1117;
+    border: none;
+    border-radius: 8px;
+    padding: 0.7rem 1.5rem;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.05em;
+  }
+  .check-btn:hover { background: #ffe066; }
+
+  /* FILL BLANK */
+  .fill-input {
+    background: #0d1117;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    color: var(--green);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.95rem;
+    padding: 0.7rem 1rem;
+    width: 100%;
+    transition: border-color 0.2s;
+    margin: 0.75rem 0;
+  }
+  .fill-input:focus { outline: none; border-color: var(--blue); }
+  .fill-input.correct-input { border-color: var(--green); }
+  .fill-input.wrong-input { border-color: var(--red); }
+
+  /* FINAL SCREEN */
+  .final-screen {
+    text-align: center;
+    padding: 2rem;
+  }
+  .final-score {
+    font-family: 'Syne', sans-serif;
+    font-size: 4rem;
+    font-weight: 800;
+    color: var(--green);
+    line-height: 1;
+  }
+  .final-grade {
+    font-size: 1rem;
+    color: var(--muted);
+    margin: 0.5rem 0 1.5rem;
+  }
+  .star-row {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+  }
+  .restart-btn {
+    background: transparent;
+    border: 2px solid var(--green);
+    color: var(--green);
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 0.85rem 2.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.05em;
+  }
+  .restart-btn:hover { background: var(--green); color: #0d1117; }
+
+  /* ANIMATIONS */
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+  }
+  .pop { animation: pop 0.3s ease; }
+
+  @media (max-width: 600px) {
+    .parts-grid { grid-template-columns: 1fr; }
+    .score-row { gap: 0.5rem; }
+  }
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="container">
+
+  <header>
+    <div class="badge">📊 Mely Canil</div>
+    <h1>Aprende la<br><span>Función SI</span> en Excel</h1>
+    <p class="subtitle">Completa los retos y domina la fórmula más útil de contabilidad</p>
+  </header>
+
+  <div class="score-row">
+    <div class="score-chip green">
+      <div class="val" id="scoreVal">0</div>
+      <div class="lbl">Puntos</div>
+    </div>
+    <div class="score-chip yellow">
+      <div class="val" id="correctVal">0</div>
+      <div class="lbl">Correctas</div>
+    </div>
+    <div class="score-chip blue">
+      <div class="val" id="levelVal">1</div>
+      <div class="lbl">Nivel</div>
+    </div>
+  </div>
+
+  <div class="progress-bar-wrap">
+    <div class="progress-bar" id="progressBar" style="width:0%"></div>
+  </div>
+  <div class="progress-label">
+    <span id="progressText">Pregunta 0 de 8</span>
+    <span id="levelText">Nivel 1: Conceptos</span>
+  </div>
+
+  <div id="gameArea"></div>
+
+</div>
+
+<script>
+// ─── DATA ──────────────────────────────────────────────────────────────────
+const LEVELS = [
+  // LEVEL 1: Tutorial + conceptos básicos
+  {
+    type: 'tutorial',
+    title: '¿Qué es la Función SI?',
+    content: `La función <strong style="color:var(--green)">SI</strong> en Excel permite tomar decisiones automáticas basadas en una condición. Es como preguntarle a Excel: <em>"¿Se cumple esta condición? Si SÍ, muestra esto; si NO, muestra aquello."</em><br><br>En contabilidad la usamos para: calcular comisiones, clasificar clientes, marcar pagos pendientes, aprobar créditos y mucho más.`
+  },
+  {
+    type: 'tutorial',
+    title: 'Estructura de la Función SI',
+    content: `La fórmula siempre tiene <strong style="color:var(--yellow)">3 partes</strong> separadas por punto y coma (;)`,
+    formula: '=SI(prueba_lógica; valor_si_verdadero; valor_si_falso)',
+    parts: true
+  },
+  {
+    type: 'mc',
+    level: '📘 Nivel 1 · Conceptos',
+    question: '¿Cuántos argumentos (partes) tiene la función SI?',
+    options: ['Solo 1: la condición', 'Dos: verdadero y falso', 'Tres: condición, si-verdadero y si-falso', 'Cuatro: condición, operador y dos resultados'],
+    correct: 2,
+    explanation: '✅ ¡Correcto! La función SI siempre tiene TRES partes: la prueba lógica (condición), el valor si es verdadero y el valor si es falso.',
+    wrongExplanation: '❌ La función SI tiene exactamente 3 argumentos: =SI(prueba_lógica; valor_si_verdadero; valor_si_falso)'
+  },
+  {
+    type: 'mc',
+    level: '📘 Nivel 1 · Conceptos',
+    question: 'En la fórmula =SI(A1>=60; "APROBADO"; "REPROBADO"), ¿cuál es la prueba lógica?',
+    options: ['"APROBADO"', 'A1>=60', '"REPROBADO"', 'A1'],
+    correct: 1,
+    explanation: '✅ ¡Exacto! A1>=60 es la condición que Excel evalúa. Pregunta: "¿el valor en A1 es mayor o igual a 60?"',
+    wrongExplanation: '❌ La prueba lógica es A1>=60. Es la pregunta que Excel se hace: "¿A1 es mayor o igual que 60?"'
+  },
+  // LEVEL 2: Aplicación contable
+  {
+    type: 'context_mc',
+    level: '📗 Nivel 2 · Contabilidad',
+    context: {
+      title: 'Caso: Ventas del Mes',
+      text: 'La empresa "Distribuidora ABC" paga comisión especial del <strong>10%</strong> si un vendedor vende más de Q5,000 en el mes, y comisión normal del <strong>5%</strong> si vende Q5,000 o menos. El vendedor Juan vendió Q6,200.'
+    },
+    question: '¿Cuál fórmula calcula correctamente la comisión de Juan si su venta está en B2?',
+    options: [
+      '=SI(B2>5000; B2*10%; B2*5%)',
+      '=SI(B2>5000; 10%; 5%)',
+      '=SI(B2=5000; B2*10%; B2*5%)',
+      '=SI(B2*10%; B2>5000; B2*5%)'
+    ],
+    correct: 0,
+    explanation: '✅ ¡Perfecto! =SI(B2>5000; B2*10%; B2*5%) — Si la venta es mayor a 5,000 multiplica por 10%, si no, por 5%. Juan recibiría Q620 de comisión.',
+    wrongExplanation: '❌ La respuesta correcta es =SI(B2>5000; B2*10%; B2*5%). La condición evalúa si supera 5,000 y aplica el porcentaje correspondiente.'
+  },
+  {
+    type: 'context_mc',
+    level: '📗 Nivel 2 · Contabilidad',
+    context: {
+      title: 'Caso: Control de Inventario',
+      text: 'El sistema de inventario debe marcar "REPONER" cuando el stock sea menor a <strong>20 unidades</strong>, y "OK" cuando tenga suficiente. El producto X tiene 15 unidades en C5.'
+    },
+    question: '¿Qué texto mostrará la fórmula =SI(C5<20; "REPONER"; "OK") para el producto X?',
+    options: ['OK', 'REPONER', '15', 'FALSO'],
+    correct: 1,
+    explanation: '✅ ¡Correcto! C5 = 15, y 15 < 20 es VERDADERO, por lo tanto Excel muestra "REPONER".',
+    wrongExplanation: '❌ Como C5=15 y 15 es menor que 20, la condición es VERDADERA y Excel devuelve el primer resultado: "REPONER".'
+  },
+  {
+    type: 'fill',
+    level: '📙 Nivel 3 · Construye la fórmula',
+    question: 'Un cliente debe Q1,500 de crédito. Si la deuda (en D3) es mayor a Q1,000, el estado es "RIESGO", si no, es "NORMAL". Completa la fórmula:',
+    template: '=SI( ___ ; "RIESGO"; "NORMAL")',
+    answer: 'D3>1000',
+    alternatives: ['D3 > 1000', 'd3>1000', 'D3>1000', 'd3 > 1000'],
+    placeholder: 'Escribe la prueba lógica...',
+    explanation: '✅ ¡Excelente! D3>1000 es la prueba lógica correcta. Cuando la deuda supera Q1,000, el sistema la marca como RIESGO.',
+    wrongExplanation: '❌ La prueba lógica correcta es D3>1000. Compara si el valor en D3 es mayor que 1,000.'
+  },
+  {
+    type: 'drag',
+    level: '📙 Nivel 3 · Construye la fórmula',
+    question: 'Ordena los bloques para construir la fórmula correcta que aprueba empleados con puntaje ≥ 70 (puntaje en E4):',
+    correctOrder: ['=SI(', 'E4>=70', ';', '"APROBADO"', ';', '"REPROBADO"', ')'],
+    chips: ['E4>=70', ';', '"REPROBADO"', '=SI(', '"APROBADO"', ')', ';'],
+    explanation: '✅ ¡Genial! La fórmula completa es: =SI(E4>=70;"APROBADO";"REPROBADO") — Evalúa si el puntaje es 70 o más para aprobar.',
+    wrongExplanation: '❌ El orden correcto es: =SI( E4>=70 ; "APROBADO" ; "REPROBADO" )'
+  },
+  // BONUS
+  {
+    type: 'spreadsheet_read',
+    level: '🏆 Nivel Final · Lectura real',
+    question: 'Observa esta hoja de Excel. ¿Qué resultado mostrará la celda D3?',
+    table: {
+      cols: ['A - Nombre', 'B - Ventas', 'C - Meta', 'D - Estado'],
+      rows: [
+        ['Pedro Gómez', 'Q 4,800', 'Q 5,000', '=SI(B2>=C2;"META";"PENDIENTE")'],
+        ['Ana López', 'Q 5,200', 'Q 5,000', '=SI(B3>=C3;"META";"PENDIENTE")'],
+        ['Luis Pérez', 'Q 3,100', 'Q 5,000', '=SI(B4>=C4;"META";"PENDIENTE")'],
+      ],
+      highlight: 1
+    },
+    options: ['META', 'PENDIENTE', 'Q 5,200', 'VERDADERO'],
+    correct: 0,
+    explanation: '✅ ¡Excelente lectura! Ana vendió Q5,200 que es ≥ a su meta de Q5,000, entonces la condición es VERDADERA y muestra "META".',
+    wrongExplanation: '❌ Ana vendió Q5,200 ≥ Q5,000 (su meta), por lo tanto la condición ES verdadera y el resultado es "META".'
+  }
+];
+
+// ─── STATE ─────────────────────────────────────────────────────────────────
+let state = { current: 0, score: 0, correct: 0, answered: false };
+const total = LEVELS.length;
+
+// ─── RENDER ────────────────────────────────────────────────────────────────
+function render() {
+  const s = LEVELS[state.current];
+  if (!s) { showFinal(); return; }
+  updateHUD();
+
+  const area = document.getElementById('gameArea');
+  area.innerHTML = '';
+
+  if (s.type === 'tutorial') renderTutorial(s, area);
+  else if (s.type === 'mc' || s.type === 'context_mc') renderMC(s, area);
+  else if (s.type === 'fill') renderFill(s, area);
+  else if (s.type === 'drag') renderDrag(s, area);
+  else if (s.type === 'spreadsheet_read') renderSpreadsheet(s, area);
+}
+
+function updateHUD() {
+  document.getElementById('scoreVal').textContent = state.score;
+  document.getElementById('correctVal').textContent = state.correct;
+  document.getElementById('levelVal').textContent = Math.ceil((state.current+1)/3);
+  const pct = Math.round((state.current/total)*100);
+  document.getElementById('progressBar').style.width = pct+'%';
+  document.getElementById('progressText').textContent = `Paso ${state.current+1} de ${total}`;
+  const levelNames = ['Nivel 1: Conceptos','Nivel 1: Conceptos','Nivel 1: Conceptos','Nivel 1: Conceptos','Nivel 2: Aplicación','Nivel 2: Aplicación','Nivel 3: Constructor','Nivel 3: Constructor','Final'];
+  document.getElementById('levelText').textContent = levelNames[state.current] || '';
+}
+
+// TUTORIAL
+function renderTutorial(s, area) {
+  const card = document.createElement('div');
+  card.className = 'card';
+  let html = `<div class="tutorial-section">
+    <div class="tutorial-title">📖 ${s.title}</div>
+    <div class="tutorial-text">${s.content}</div>
+  </div>`;
+  if (s.formula) {
+    html += `<div class="formula-box">${s.formula}</div>`;
+  }
+  if (s.parts) {
+    html += `<div class="parts-grid">
+      <div class="part-item p1">
+        <div class="part-name">1. Prueba Lógica</div>
+        <div class="part-val">¿Condición?</div>
+      </div>
+      <div class="part-item p2">
+        <div class="part-name">2. Si Verdadero</div>
+        <div class="part-val">Resultado SÍ</div>
+      </div>
+      <div class="part-item p3">
+        <div class="part-name">3. Si Falso</div>
+        <div class="part-val">Resultado NO</div>
+      </div>
+    </div>
+    <div class="tutorial-text" style="margin-top:0.5rem;">
+      <strong style="color:var(--yellow)">Ejemplo:</strong> =SI(<span style="color:var(--yellow)">B2>5000</span>; <span style="color:var(--green)">"COMISIÓN ALTA"</span>; <span style="color:var(--red)">"COMISIÓN NORMAL"</span>)
+    </div>`;
+  }
+  html += `<button class="next-btn show" onclick="advance()">Entendido → Siguiente</button>`;
+  card.innerHTML = html;
+  area.appendChild(card);
+}
+
+// MULTIPLE CHOICE
+function renderMC(s, area) {
+  const card = document.createElement('div');
+  card.className = 'card';
+  let html = `<div class="question-tag">${s.level || ''}</div>`;
+
+  if (s.context) {
+    html += `<div class="context-box"><strong>📋 ${s.context.title}</strong><br><br>${s.context.text}</div>`;
+  }
+
+  html += `<div class="question-text">${s.question}</div><div class="options">`;
+  const letters = ['A','B','C','D'];
+  s.options.forEach((opt, i) => {
+    html += `<button class="option-btn" id="opt_${i}" onclick="answerMC(${i})">
+      <span class="option-letter">${letters[i]}</span>
+      <span>${opt}</span>
+    </button>`;
+  });
+  html += `</div>
+  <div class="feedback" id="feedback"></div>
+  <button class="next-btn" id="nextBtn" onclick="advance()">Siguiente →</button>`;
+  card.innerHTML = html;
+  area.appendChild(card);
+}
+
+function answerMC(idx) {
+  if (state.answered) return;
+  state.answered = true;
+  const s = LEVELS[state.current];
+  const fb = document.getElementById('feedback');
+  const nb = document.getElementById('nextBtn');
+
+  for (let i = 0; i < s.options.length; i++) {
+    const btn = document.getElementById('opt_'+i);
+    btn.disabled = true;
+    if (i === s.correct) btn.classList.add('correct');
+    else if (i === idx && i !== s.correct) btn.classList.add('wrong');
+  }
+
+  if (idx === s.correct) {
+    state.score += 100; state.correct++;
+    fb.className = 'feedback correct-fb show';
+    fb.textContent = s.explanation;
+    document.getElementById('scoreVal').textContent = state.score;
+    document.getElementById('correctVal').textContent = state.correct;
+    document.getElementById('scoreVal').classList.add('pop');
+    setTimeout(()=>document.getElementById('scoreVal').classList.remove('pop'), 300);
+  } else {
+    fb.className = 'feedback wrong-fb show';
+    fb.textContent = s.wrongExplanation;
+  }
+
+  nb.classList.add('show');
+}
+
+// FILL IN THE BLANK
+function renderFill(s, area) {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = `
+    <div class="question-tag">${s.level}</div>
+    <div class="question-text">${s.question}</div>
+    <div class="formula-box">${s.template}</div>
+    <input class="fill-input" id="fillInput" placeholder="${s.placeholder}" autocomplete="off" onkeydown="if(event.key==='Enter')checkFill()">
+    <button class="check-btn" onclick="checkFill()">Verificar ✓</button>
+    <div class="feedback" id="feedback"></div>
+    <button class="next-btn" id="nextBtn" onclick="advance()">Siguiente →</button>
+  `;
+  area.appendChild(card);
+}
+
+function checkFill() {
+  if (state.answered) return;
+  const s = LEVELS[state.current];
+  const input = document.getElementById('fillInput');
+  const val = input.value.trim();
+  const correct = [s.answer, ...(s.alternatives||[])].some(a => a.replace(/\s/g,'').toLowerCase() === val.replace(/\s/g,'').toLowerCase());
+  state.answered = true;
+  input.disabled = true;
+  const fb = document.getElementById('feedback');
+  const nb = document.getElementById('nextBtn');
+
+  if (correct) {
+    input.classList.add('correct-input');
+    state.score += 100; state.correct++;
+    fb.className = 'feedback correct-fb show';
+    fb.textContent = s.explanation;
+    document.getElementById('scoreVal').textContent = state.score;
+    document.getElementById('correctVal').textContent = state.correct;
+  } else {
+    input.classList.add('wrong-input');
+    fb.className = 'feedback wrong-fb show';
+    fb.textContent = s.wrongExplanation + ` La respuesta era: ${s.answer}`;
+  }
+  nb.classList.add('show');
+}
+
+// DRAG AND DROP
+function renderDrag(s, area) {
+  const card = document.createElement('div');
+  card.className = 'card';
+  const shuffled = [...s.chips].sort(() => Math.random() - 0.5);
+
+  card.innerHTML = `
+    <div class="question-tag">${s.level}</div>
+    <div class="question-text">${s.question}</div>
+    <div class="drag-instructions">Arrastra las piezas al área de construcción en el orden correcto:</div>
+    <div class="drag-area" id="source">
+      ${shuffled.map(chip => `<div class="drag-chip" draggable="true" data-val="${chip}">${chip}</div>`).join('')}
+    </div>
+    <div class="drag-instructions">Tu fórmula:</div>
+    <div class="drag-area target" id="target"></div>
+    <div class="built-formula" id="builtFormula">Empieza a arrastrar...</div>
+    <div style="display:flex;gap:0.75rem;margin-top:0.5rem;">
+      <button class="check-btn" onclick="checkDrag()">Verificar ✓</button>
+      <button class="check-btn" style="background:#30363d;color:var(--muted)" onclick="resetDrag()">Reiniciar</button>
+    </div>
+    <div class="feedback" id="feedback"></div>
+    <button class="next-btn" id="nextBtn" onclick="advance()">Siguiente →</button>
+  `;
+  area.appendChild(card);
+  setupDrag();
+}
+
+function setupDrag() {
+  let dragged = null;
+  document.querySelectorAll('.drag-chip').forEach(chip => {
+    chip.addEventListener('dragstart', e => {
+      dragged = chip;
+      setTimeout(() => chip.classList.add('dragging'), 0);
+    });
+    chip.addEventListener('dragend', () => chip.classList.remove('dragging'));
+  });
+
+  ['source','target'].forEach(id => {
+    const el = document.getElementById(id);
+    el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('over'); });
+    el.addEventListener('dragleave', () => el.classList.remove('over'));
+    el.addEventListener('drop', e => {
+      e.preventDefault(); el.classList.remove('over');
+      if (dragged) { el.appendChild(dragged); updateBuiltFormula(); }
+    });
+  });
+}
+
+function updateBuiltFormula() {
+  const target = document.getElementById('target');
+  const chips = target.querySelectorAll('.drag-chip');
+  const formula = Array.from(chips).map(c => c.dataset.val).join('');
+  document.getElementById('builtFormula').textContent = formula || 'Empieza a arrastrar...';
+}
+
+function resetDrag() {
+  const source = document.getElementById('source');
+  const target = document.getElementById('target');
+  Array.from(target.querySelectorAll('.drag-chip')).forEach(c => source.appendChild(c));
+  updateBuiltFormula();
+}
+
+function checkDrag() {
+  if (state.answered) return;
+  const s = LEVELS[state.current];
+  const target = document.getElementById('target');
+  const chips = Array.from(target.querySelectorAll('.drag-chip')).map(c => c.dataset.val);
+  const correct = s.correctOrder.join('') === chips.join('');
+  state.answered = true;
+  const fb = document.getElementById('feedback');
+  const nb = document.getElementById('nextBtn');
+
+  if (correct) {
+    state.score += 100; state.correct++;
+    fb.className = 'feedback correct-fb show';
+    fb.textContent = s.explanation;
+    document.getElementById('scoreVal').textContent = state.score;
+    document.getElementById('correctVal').textContent = state.correct;
+  } else {
+    fb.className = 'feedback wrong-fb show';
+    fb.textContent = s.wrongExplanation + ' → ' + s.correctOrder.join('');
+  }
+  nb.classList.add('show');
+}
+
+// SPREADSHEET READ
+function renderSpreadsheet(s, area) {
+  const card = document.createElement('div');
+  card.className = 'card';
+
+  const cols = 4;
+  const colW = `grid-template-columns: repeat(${cols}, 1fr)`;
+
+  let tableHtml = `<div class="spreadsheet">
+    <div class="ss-header" style="${colW}">
+      ${s.table.cols.map(c => `<div class="ss-cell head">${c}</div>`).join('')}
+    </div>`;
+
+  s.table.rows.forEach((row, ri) => {
+    const isHL = ri === s.table.highlight;
+    tableHtml += `<div class="ss-row" style="${colW}">`;
+    row.forEach((cell, ci) => {
+      let cls = 'ss-cell';
+      if (isHL) cls += ' highlight';
+      if (ci === 3) cls += ' formula';
+      tableHtml += `<div class="${cls}">${cell}</div>`;
+    });
+    tableHtml += `</div>`;
+  });
+  tableHtml += `</div>`;
+
+  let html = `<div class="question-tag">${s.level}</div>
+    <div class="question-text">${s.question}</div>
+    ${tableHtml}
+    <div class="options" style="margin-top:1rem;">`;
+
+  const letters = ['A','B','C','D'];
+  s.options.forEach((opt, i) => {
+    html += `<button class="option-btn" id="opt_${i}" onclick="answerMC(${i})">
+      <span class="option-letter">${letters[i]}</span>
+      <span>${opt}</span>
+    </button>`;
+  });
+
+  html += `</div>
+    <div class="feedback" id="feedback"></div>
+    <button class="next-btn" id="nextBtn" onclick="advance()">Ver Resultados →</button>`;
+
+  card.innerHTML = html;
+  area.appendChild(card);
+}
+
+// FINAL
+function showFinal() {
+  const pct = Math.round((state.correct / (total - 2)) * 100); // exclude tutorials
+  let grade, stars;
+  if (pct >= 90) { grade = '¡Dominas la Función SI!'; stars = '⭐⭐⭐'; }
+  else if (pct >= 70) { grade = 'Buen trabajo, sigue practicando'; stars = '⭐⭐'; }
+  else { grade = 'Repasa los conceptos e intenta de nuevo'; stars = '⭐'; }
+
+  document.getElementById('gameArea').innerHTML = `
+    <div class="card final-screen">
+      <div style="font-size:3rem;margin-bottom:1rem">🎓</div>
+      <div class="final-score">${state.score} pts</div>
+      <div class="final-grade">${state.correct} respuestas correctas de ${total-2} preguntas</div>
+      <div class="star-row">${stars}</div>
+      <p style="color:var(--muted);font-size:0.82rem;margin-bottom:1.5rem;">${grade}</p>
+      <div class="formula-box" style="margin-bottom:1.5rem;">
+        =SI(condición; valor_verdadero; valor_falso)
+      </div>
+      <p style="color:var(--muted);font-size:0.75rem;margin-bottom:1.5rem;">
+        Recuerda: la Función SI es tu mejor herramienta para automatizar decisiones en Excel.<br>
+        Úsala para comisiones, inventarios, estados de cuenta ¡y mucho más!
+      </p>
+      <button class="restart-btn" onclick="restartGame()">🔄 Jugar de Nuevo</button>
+    </div>
+  `;
+  document.getElementById('progressBar').style.width = '100%';
+  document.getElementById('progressText').textContent = `¡Completado!`;
+}
+
+function advance() {
+  state.current++;
+  state.answered = false;
+  render();
+}
+
+function restartGame() {
+  state = { current: 0, score: 0, correct: 0, answered: false };
+  render();
+}
+
+// START
+render();
+</script>
+</body>
+</html>
